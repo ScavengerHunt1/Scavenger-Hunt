@@ -29,23 +29,21 @@ body{
   animation:fadeIn .6s ease;
 }
 
-  #googleBtn {
-  margin-top: 22px;
-  padding: 12px 28px;
-  border: none;
-  border-radius: 25px; /* Pill shape */
-  background: #00c6ff;
-  color: #000;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.3s;
+ button{
+  margin-top:22px;
+  padding:12px 28px;
+  border:none;
+  border-radius:25px;
+  background:#00c6ff;
+  color:#000;
+  font-size:16px;
+  cursor:pointer;
 }
-
-#googleBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  #googleBtn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
 }
-
+  
 @keyframes fadeIn{
   from{opacity:0;transform:translateY(12px)}
   to{opacity:1;transform:translateY(0)}
@@ -176,18 +174,14 @@ const number = document.getElementById("number");
 const result = document.getElementById("screen-result");
 const decrypt = document.getElementById("decryptText");
 
-//login
-googleBtn.onclick = async () => {
+/* GOOGLE LOGIN */
+document.getElementById("googleBtn").onclick = async () => {
   googleBtn.disabled = true;
+  try{
+    const res = await signInWithPopup(auth, new GoogleAuthProvider());
+    const u = res.user;
 
-  let user;
-
-  try {
-    // ✅ AUTH ONLY
-    const result = await signInWithPopup(auth, provider);
-    user = result.user;
-
-    if (!user) {
+   if (!user) {
       throw new Error("User object missing");
     }
 
@@ -216,8 +210,8 @@ googleBtn.onclick = async () => {
       email: user.email,
       lastLogin: Date.now()
     });
-    
-login.classList.add("hidden");
+
+    login.classList.add("hidden");
     welcome.classList.remove("hidden");
     document.getElementById("welcomeText").innerText =
       `Welcome, ${u.displayName || "Explorer"}`;
@@ -227,11 +221,8 @@ login.classList.add("hidden");
       explorer.classList.remove("hidden");
     },1500);
 
-  } catch (dbError) {
-    console.error("Post-login error:", dbError);
-    alert("Something went wrong after login ❌");
-    googleBtn.disabled = false;
-    return; // ⛔ STOP
+  }catch(e){
+    alert(e.message);
   }
 };
 
