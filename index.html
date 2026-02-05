@@ -2,149 +2,127 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Scavenger Hunt</title>
+<title>Admin Panel – Scavenger Hunt</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
-  height:100vh;
-  background:radial-gradient(circle at top,#16222a,#0f2027);
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  min-height:100vh;
+  background:#0b0f14;
   font-family:"Segoe UI",Arial,sans-serif;
   color:white;
-  overflow:hidden;
 }
-.hidden{display:none}
-
-.card{
-  background:rgba(0,0,0,.65);
-  padding:35px 45px;
-  border-radius:18px;
-  max-width:520px;
+.center{display:flex;justify-content:center;align-items:center;height:100vh}
+.connect-card{
+  background:rgba(20,25,32,.9);
+  padding:40px;
+  border-radius:20px;
+  width:360px;
   text-align:center;
-  box-shadow:0 15px 40px rgba(0,0,0,.6);
-  animation:fadeIn .6s ease;
+  box-shadow:0 0 60px rgba(0,255,255,.15);
 }
-
-button{
-  margin-top:22px;
-  padding:12px 28px;
+input,button{
+  width:100%;
+  padding:14px;
+  margin-top:15px;
   border:none;
-  border-radius:25px;
-  background:#00c6ff;
-  color:#000;
-  font-size:16px;
-  cursor:pointer;
+  border-radius:12px;
+  font-size:15px;
+}
+input{background:#0f1620;color:white}
+button{background:#00e5ff;color:black;font-weight:bold;cursor:pointer}
+
+.dashboard{padding:25px;max-width:1100px;margin:auto}
+.top-stats{
+  display: flex;
+  justify-content: space-between; /* To push logout to the right */
+  align-items: center;
+  margin-bottom:25px;
+}
+.stat{
+  background:rgba(20,25,32,.9);
+  border-radius:18px;
+  padding:25px;
+  text-align:center;
+  flex: 1; /* Allow stat to grow */
+  margin-right: 20px; /* Space between stat and admin info */
+}
+.stat h1{margin:0;font-size:42px;color:#00ffd5}
+
+.admin-info {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.admin-info span {
+    margin-bottom: 5px;
+}
+.admin-info button {
+    width: auto;
+    padding: 8px 15px;
+    margin-top: 10px;
+    font-size: 14px;
+    background: #ff4d4d;
+    color: white;
 }
 
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(12px)}
-  to{opacity:1;transform:translateY(0)}
-}
 
-/* TIMER */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:10;
+.table{background:rgba(20,25,32,.9);border-radius:18px;overflow:hidden}
+.row{
+  display:grid;
+  grid-template-columns:1.2fr 2fr 1.5fr;
+  padding:16px 20px;
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
-
-.timer{
-  width:200px;
-  height:200px;
-  position:relative;
-}
-
-svg{transform:rotate(-90deg)}
-
-.bg{
-  fill:none;
-  stroke:#222;
-  stroke-width:10;
-}
-
-.progress{
-  fill:none;
-  stroke-width:10;
-  stroke-linecap:round;
-  stroke-dasharray:565;
-  stroke-dashoffset:0;
-}
-
-.number{
-  position:absolute;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:56px;
-  font-weight:bold;
-  text-shadow:0 0 25px currentColor;
-}
-
-/* Decrypt */
-.decrypt{
-  font-family:Consolas,monospace;
-  color:#00ff9c;
-  white-space:pre-line;
-  animation:flicker .15s infinite;
-}
-@keyframes flicker{50%{opacity:.85}}
+.row.header{background:rgba(0,0,0,.4);font-weight:bold;color:#00ffd5}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
-<!-- SCREEN 1: LOGIN -->
-<div class="card" id="screen-login">
-  <h2>Continue to Scavenger Hunt</h2>
-  <button id="googleBtn">Continue with Google</button>
-</div>
-
-<!-- SCREEN 2: WELCOME -->
-<div class="card hidden" id="screen-welcome">
-  <h2 id="welcomeText"></h2>
-</div>
-
-<!-- SCREEN 3: EXPLORER -->
-<div class="card hidden" id="screen-explorer">
-  <h2>🗝️ Well done, Explorer!</h2>
-  <p>
-    You’ve reached the next hint of the Scavenger Hunt.<br>
-    Secrets await… are you ready?
-  </p>
-  <button id="readyBtn">I’m Ready 🔓</button>
-</div>
-
-<!-- TIMER -->
-<div class="overlay" id="overlay">
-  <div class="timer">
-    <svg width="200" height="200">
-      <circle class="bg" cx="100" cy="100" r="90"/>
-      <circle class="progress" cx="100" cy="100" r="90" id="ring"/>
-    </svg>
-    <div class="number" id="number">3</div>
+<!-- CONNECT -->
+<div class="center" id="connectScreen">
+  <div class="connect-card">
+    <h2>Admin Login</h2>
+    <p>Please log in with an authorized admin account.</p>
+    <button id="adminLoginBtn">Login with Google</button>
   </div>
 </div>
 
-<!-- RESULT -->
-<div class="card hidden" id="screen-result">
-  <div class="decrypt" id="decryptText"></div>
+<!-- DASHBOARD -->
+<div class="dashboard hidden" id="dashboard">
+  <div class="top-stats">
+    <div class="stat">
+      <h1 id="totalCount">0</h1>
+      <p>TOTAL PARTICIPANTS</p>
+    </div>
+    <div class="admin-info">
+      <span id="loggedInAdminName"></span>
+      <button id="adminLogoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <div class="table">
+    <div class="row header">
+      <span>Name</span>
+      <span>Email</span>
+      <span>Actions</span>
+    </div>
+    <div id="list"></div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { getDatabase, ref, onValue, remove, update, get } // Added 'get' for admin check
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-/* FIREBASE CONFIG */
+// Firebase configuration - Hardcoded from your project details
 const firebaseConfig = {
   apiKey: "AIzaSyBixnzScRlcOHMp29UGNpdYU8atVt0qnRQ",
   authDomain: "scavenger-hunt-11b9f.firebaseapp.com",
@@ -155,93 +133,175 @@ const firebaseConfig = {
   appId: "1:678881921446:web:17378cae12222c5103a767"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const app = initializeApp(firebaseConfig, "admin-panel-app"); // Use a distinct app name to avoid conflicts
 const db = getDatabase(app);
-await setPersistence(auth, inMemoryPersistence);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-/* ELEMENTS */
-const login = document.getElementById("screen-login");
-const welcome = document.getElementById("screen-welcome");
-const explorer = document.getElementById("screen-explorer");
-const overlay = document.getElementById("overlay");
-const ring = document.getElementById("ring");
-const number = document.getElementById("number");
-const result = document.getElementById("screen-result");
-const decrypt = document.getElementById("decryptText");
+// UI Elements
+const connectScreen = document.getElementById("connectScreen");
+const dashboard = document.getElementById("dashboard");
+const adminLoginBtn = document.getElementById("adminLoginBtn");
+const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+const list = document.getElementById("list");
+const totalCount = document.getElementById("totalCount");
+const loggedInAdminName = document.getElementById("loggedInAdminName");
 
-/* GOOGLE LOGIN */
-document.getElementById("googleBtn").onclick = async () => {
-  try{
-    const res = await signInWithPopup(auth, new GoogleAuthProvider());
-    const u = res.user;
+let currentAdminUser = null; // To store the authenticated admin user
 
-    /* ✅ SAVE USER — NO DUPLICATES */
-    await set(ref(db, "participants/" + u.uid), {
-      name: u.displayName,
-      email: u.email,
-      lastLogin: new Date().toISOString()
+// Function to load and display participant data
+const loadParticipants = () => {
+  onValue(ref(db, "participants"), snap => {
+    list.innerHTML = "";
+    let count = 0;
+
+    snap.forEach(child => {
+      count++;
+      const d = child.val();
+      const isBlocked = d.blocked === true;
+
+      list.innerHTML += `
+        <div class="row">
+          <span>${d.name || "—"}</span>
+          <span>${d.email || "—"}</span>
+          <span>
+            ${
+              isBlocked
+              ? `<button onclick="unblockUser('${child.key}')" style="background:#4caf50;color:black">✅ Unblock</button>`
+              : `<button onclick="blockUser('${child.key}')">🚫 Block</button>`
+            }
+            <button onclick="deleteUser('${child.key}')" style="background:#ff4d4d;color:white">🗑 Delete</button>
+          </span>
+        </div>
+      `;
     });
-
-    login.classList.add("hidden");
-    welcome.classList.remove("hidden");
-    document.getElementById("welcomeText").innerText =
-      `Welcome, ${u.displayName || "Explorer"}`;
-
-    setTimeout(()=>{
-      welcome.classList.add("hidden");
-      explorer.classList.remove("hidden");
-    },1500);
-
-  }catch(e){
-    alert(e.message);
-  }
+    totalCount.innerText = count;
+  });
 };
 
-/* READY BUTTON */
-document.getElementById("readyBtn").onclick = () => {
-  explorer.classList.add("hidden");
-  overlay.style.display = "flex";
+// Admin Login Handler
+adminLoginBtn.onclick = async () => {
+  try {
+    adminLoginBtn.disabled = true; // Disable button during login attempt
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-  const duration = 3000;
-  const start = performance.now();
-  const circumference = 2 * Math.PI * 90;
+    // Check if the signed-in user is an admin
+    const adminRef = ref(db, `admins/${user.uid}`);
+    const adminSnap = await get(adminRef);
 
-  function animate(t){
-    const p = Math.min((t - start) / duration, 1);
-    ring.style.strokeDashoffset = circumference * p;
-
-    const r = Math.floor(255 * p);
-    const g = Math.floor(229 + (46 * p));
-    const b = Math.floor(255 - (255 * p));
-    const color = `rgb(${r},${g},${b})`;
-
-    ring.style.stroke = color;
-    ring.style.filter = `drop-shadow(0 0 ${30 * (1 - p)}px ${color})`;
-    number.style.color = color;
-    number.textContent = Math.ceil((duration - (t - start)) / 1000) || "";
-
-    if(p < 1){
-      requestAnimationFrame(animate);
-    }else{
-      overlay.style.display = "none";
-      result.classList.remove("hidden");
-
-      decrypt.className = "decrypt";
-      decrypt.innerText =
-        "Decrypting hint...\nAccessing data...\n██████████▒▒▒▒▒▒▒▒▒▒";
-
-      setTimeout(()=>{
-        decrypt.style.animation = "none";
-        decrypt.style.color = "#00ffd5";
-        decrypt.style.textShadow = "0 0 12px rgba(0,255,213,.6)";
-        decrypt.innerText =
-          "🔍 Next Hint:\nLook where knowledge sleeps and wisdom waits…";
-      },2500);
+    if (adminSnap.exists() && adminSnap.val() === true) {
+      console.log("Admin logged in:", user.displayName);
+      currentAdminUser = user;
+      loggedInAdminName.textContent = `Logged in as: ${user.displayName || user.email}`;
+      connectScreen.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+      loadParticipants(); // Start loading data for admin
+    } else {
+      alert("Access Denied: You are not an authorized administrator.");
+      await signOut(auth); // Log out non-admin users
+      // Reset UI to login state
+      connectScreen.classList.remove("hidden");
+      dashboard.classList.add("hidden");
+      loggedInAdminName.textContent = "";
+      currentAdminUser = null;
     }
+  } catch (error) {
+    console.error("Admin Login failed:", error);
+    alert("Login failed ❌ " + error.message);
+  } finally {
+    adminLoginBtn.disabled = false; // Re-enable button
   }
-  requestAnimationFrame(animate);
 };
+
+// Admin Logout Handler
+adminLogoutBtn.onclick = async () => {
+  try {
+    await signOut(auth);
+    alert("Logged out successfully.");
+    // UI state handled by onAuthStateChanged listener
+  } catch (error) {
+    console.error("Logout failed:", error);
+    alert("Logout failed ❌ " + error.message);
+  }
+};
+
+// Listen for auth state changes to manage UI (initial load and subsequent changes)
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    // User is signed in, check if they are an admin
+    const adminRef = ref(db, `admins/${user.uid}`);
+    const adminSnap = await get(adminRef);
+
+    if (adminSnap.exists() && adminSnap.val() === true) {
+      currentAdminUser = user;
+      loggedInAdminName.textContent = `Logged in as: ${user.displayName || user.email}`;
+      connectScreen.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+      loadParticipants();
+    } else {
+      // Signed in but not an admin, log them out and show message
+      await signOut(auth);
+      // Ensure UI is reset to login screen if they were somehow logged in as non-admin
+      connectScreen.classList.remove("hidden");
+      dashboard.classList.add("hidden");
+      loggedInAdminName.textContent = "";
+      currentAdminUser = null;
+      alert("You are not authorized to access this admin panel.");
+    }
+  } else {
+    // User is signed out
+    connectScreen.classList.remove("hidden");
+    dashboard.classList.add("hidden");
+    loggedInAdminName.textContent = "";
+    currentAdminUser = null;
+  }
+});
+
+
+// Global functions for buttons (must be defined on window for onclick to work)
+window.unblockUser = (id) => {
+  if (currentAdminUser && confirm("Unblock this participant?")) {
+    update(ref(db, "participants/" + id), {
+      blocked: false
+    }).then(() => {
+      console.log(`User ${id} unblocked.`);
+    }).catch(error => {
+      console.error("Error unblocking user:", error);
+      alert("Failed to unblock user: " + error.message);
+    });
+  } else if (!currentAdminUser) {
+      alert("You must be logged in as an administrator to perform this action.");
+  }
+};
+
+window.deleteUser = (id) => {
+  if (currentAdminUser && confirm("Delete this participant? This action cannot be undone.")) {
+    remove(ref(db, "participants/" + id)).then(() => {
+      console.log(`User ${id} deleted.`);
+    }).catch(error => {
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user: " + error.message);
+    });
+  } else if (!currentAdminUser) {
+      alert("You must be logged in as an administrator to perform this action.");
+  }
+};
+
+window.blockUser = (id) => {
+  if (currentAdminUser && confirm("Block this participant?")) {
+    update(ref(db, "participants/" + id), { blocked: true })
+    .then(() => {
+      console.log(`User ${id} blocked.`);
+    }).catch(error => {
+      console.error("Error blocking user:", error);
+      alert("Failed to block user: " + error.message);
+    });
+  } else if (!currentAdminUser) {
+      alert("You must be logged in as an administrator to perform this action.");
+  }
+};
+
 </script>
 
 </body>
