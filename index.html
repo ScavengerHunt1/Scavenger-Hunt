@@ -177,6 +177,7 @@ const decrypt = document.getElementById("decryptText");
 /* GOOGLE LOGIN */
 document.getElementById("googleBtn").onclick = async () => {
   googleBtn.disabled = true;
+   let user;
   try{
     const res = await signInWithPopup(auth, new GoogleAuthProvider());
     const u = res.user;
