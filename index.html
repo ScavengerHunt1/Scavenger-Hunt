@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scavenger Hunt</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  height:100vh;
+  background:radial-gradient(circle at top,#16222a,#0f2027);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:"Segoe UI",Arial,sans-serif;
+  color:white;
+  overflow:hidden;
+}
+.hidden{display:none}
+
+.card{
+  background:rgba(0,0,0,.65);
+  padding:35px 45px;
+  border-radius:18px;
+  max-width:520px;
+  text-align:center;
+  box-shadow:0 15px 40px rgba(0,0,0,.6);
+  animation:fadeIn .6s ease;
+}
+
+button{
+  margin-top:22px;
+  padding:12px 28px;
+  border:none;
+  border-radius:25px;
+  background:#00c6ff;
+  color:#000;
+  font-size:16px;
+  cursor:pointer;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* TIMER */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:10;
+}
+
+.timer{
+  width:200px;
+  height:200px;
+  position:relative;
+}
+
+svg{transform:rotate(-90deg)}
+
+.bg{
+  fill:none;
+  stroke:#222;
+  stroke-width:10;
+}
+
+.progress{
+  fill:none;
+  stroke-width:10;
+  stroke-linecap:round;
+  stroke-dasharray:565;
+  stroke-dashoffset:0;
+}
+
+.number{
+  position:absolute;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:56px;
+  font-weight:bold;
+  text-shadow:0 0 25px currentColor;
+}
+
+/* Decrypt */
+.decrypt{
+  font-family:Consolas,monospace;
+  color:#00ff9c;
+  white-space:pre-line;
+  animation:flicker .15s infinite;
+}
+@keyframes flicker{50%{opacity:.85}}
+</style>
+</head>
+
+<body>
+
+<!-- SCREEN 1: LOGIN -->
+<div class="card" id="screen-login">
+  <h2>Continue to Scavenger Hunt</h2>
+  <button id="googleBtn">Continue with Google</button>
+</div>
+
+<!-- SCREEN 2: WELCOME -->
+<div class="card hidden" id="screen-welcome">
+  <h2 id="welcomeText"></h2>
+</div>
+
+<!-- SCREEN 3: EXPLORER -->
+<div class="card hidden" id="screen-explorer">
+  <h2>🗝️ Well done, Explorer!</h2>
+  <p>
+    You’ve reached the next hint of the Scavenger Hunt.<br>
+    Secrets await… are you ready?
+  </p>
+  <button id="readyBtn">I’m Ready 🔓</button>
+</div>
+
+<!-- TIMER -->
+<div class="overlay" id="overlay">
+  <div class="timer">
+    <svg width="200" height="200">
+      <circle class="bg" cx="100" cy="100" r="90"/>
+      <circle class="progress" cx="100" cy="100" r="90" id="ring"/>
+    </svg>
+    <div class="number" id="number">3</div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="card hidden" id="screen-result">
+  <div class="decrypt" id="decryptText"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+/* FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBixnzScRlcOHMp29UGNpdYU8atVt0qnRQ",
+  authDomain: "scavenger-hunt-11b9f.firebaseapp.com",
+  databaseURL: "https://scavenger-hunt-11b9f-default-rtdb.firebaseio.com",
+  projectId: "scavenger-hunt-11b9f",
+  storageBucket: "scavenger-hunt-11b9f.firebasestorage.app",
+  messagingSenderId: "678881921446",
+  appId: "1:678881921446:web:17378cae12222c5103a767"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+await setPersistence(auth, inMemoryPersistence);
+
+/* ELEMENTS */
+const login = document.getElementById("screen-login");
+const welcome = document.getElementById("screen-welcome");
+const explorer = document.getElementById("screen-explorer");
+const overlay = document.getElementById("overlay");
+const ring = document.getElementById("ring");
+const number = document.getElementById("number");
+const result = document.getElementById("screen-result");
+const decrypt = document.getElementById("decryptText");
+
+/* GOOGLE LOGIN */
+document.getElementById("googleBtn").onclick = async () => {
+  try{
+    const res = await signInWithPopup(auth, new GoogleAuthProvider());
+    const u = res.user;
+
+    /* ✅ SAVE USER — NO DUPLICATES */
+    await set(ref(db, "participants/" + u.uid), {
+      name: u.displayName,
+      email: u.email,
+      lastLogin: new Date().toISOString()
+    });
+
+    login.classList.add("hidden");
+    welcome.classList.remove("hidden");
+    document.getElementById("welcomeText").innerText =
+      `Welcome, ${u.displayName || "Explorer"}`;
+
+    setTimeout(()=>{
+      welcome.classList.add("hidden");
+      explorer.classList.remove("hidden");
+    },1500);
+
+  }catch(e){
+    alert(e.message);
+  }
+};
+
+/* READY BUTTON */
+document.getElementById("readyBtn").onclick = () => {
+  explorer.classList.add("hidden");
+  overlay.style.display = "flex";
+
+  const duration = 3000;
+  const start = performance.now();
+  const circumference = 2 * Math.PI * 90;
+
+  function animate(t){
+    const p = Math.min((t - start) / duration, 1);
+    ring.style.strokeDashoffset = circumference * p;
+
+    const r = Math.floor(255 * p);
+    const g = Math.floor(229 + (46 * p));
+    const b = Math.floor(255 - (255 * p));
+    const color = `rgb(${r},${g},${b})`;
+
+    ring.style.stroke = color;
+    ring.style.filter = `drop-shadow(0 0 ${30 * (1 - p)}px ${color})`;
+    number.style.color = color;
+    number.textContent = Math.ceil((duration - (t - start)) / 1000) || "";
+
+    if(p < 1){
+      requestAnimationFrame(animate);
+    }else{
+      overlay.style.display = "none";
+      result.classList.remove("hidden");
+
+      decrypt.className = "decrypt";
+      decrypt.innerText =
+        "Decrypting hint...\nAccessing data...\n██████████▒▒▒▒▒▒▒▒▒▒";
+
+      setTimeout(()=>{
+        decrypt.style.animation = "none";
+        decrypt.style.color = "#00ffd5";
+        decrypt.style.textShadow = "0 0 12px rgba(0,255,213,.6)";
+        decrypt.innerText =
+          "🔍 Next Hint:\nLook where knowledge sleeps and wisdom waits…";
+      },2500);
+    }
+  }
+  requestAnimationFrame(animate);
+};
+</script>
+
+</body>
+</html>
