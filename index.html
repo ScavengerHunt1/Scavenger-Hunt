@@ -145,8 +145,10 @@ svg{transform:rotate(-90deg)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+// Added 'signOut' to imports
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+// Added 'get' and 'update' to imports
+import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
@@ -163,8 +165,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const provider = new GoogleAuthProvider();
+
+// Setting persistence to session only (optional but good for hunts)
 await setPersistence(auth, inMemoryPersistence);
-  
 
 /* ELEMENTS */
 const login = document.getElementById("screen-login");
@@ -175,68 +178,69 @@ const ring = document.getElementById("ring");
 const number = document.getElementById("number");
 const result = document.getElementById("screen-result");
 const decrypt = document.getElementById("decryptText");
+const googleBtn = document.getElementById("googleBtn");
 
-//login
+// LOGIN LOGIC
 googleBtn.onclick = async () => {
   googleBtn.disabled = true;
-   let user;
-  try{
- // ✅ AUTH ONLY
+  let user;
+
+  // --- STEP 1: AUTHENTICATION ---
+  try {
     const result = await signInWithPopup(auth, provider);
     user = result.user;
 
-   if (!user) {
+    if (!user) {
       throw new Error("User object missing");
     }
-
   } catch (authError) {
-    console.error("Auth error:", authError);
-    alert("Login failed ❌");
+    console.error("Auth error details:", authError);
+    alert("Login failed: " + authError.message);
     googleBtn.disabled = false;
-    return; // ⛔ STOP EVERYTHING
+    return; // STOP HERE
   }
 
-  // ⬇️ FROM HERE: LOGIN IS CONFIRMED SUCCESSFUL ⬇️
-
+  // --- STEP 2: DATABASE CHECK ---
   try {
     const userRef = ref(db, "participants/" + user.uid);
-    const snap = await get(userRef);
+    const snap = await get(userRef); // This works now because we imported 'get'
 
+    // Check if user is blocked
     if (snap.exists() && snap.val().blocked === true) {
       alert("You are blocked from this event.");
-      await signOut(auth);
+      await signOut(auth); // This works now because we imported 'signOut'
       googleBtn.disabled = false;
-      return; // ⛔ STOP
+      return; 
     }
 
-    await update(userRef, {
+    // Update user data
+    await update(userRef, {  // This works now because we imported 'update'
       name: user.displayName,
       email: user.email,
       lastLogin: Date.now()
     });
 
+    // UI Transitions
     login.classList.add("hidden");
     welcome.classList.remove("hidden");
+    
+    // FIXED: Changed 'u.displayName' to 'user.displayName'
     document.getElementById("welcomeText").innerText =
-      `Welcome, ${u.displayName || "Explorer"}`;
+      `Welcome, ${user.displayName || "Explorer"}`;
 
-    setTimeout(()=>{
+    setTimeout(() => {
       welcome.classList.add("hidden");
       explorer.classList.remove("hidden");
-    },1500);
+    }, 1500);
 
-  }catch(e){
-    alert(e.message);
+  } catch (dbError) {
+    console.error("Database error:", dbError);
+    alert("Database Error: " + dbError.message);
+    googleBtn.disabled = false;
   }
-   catch (dbError) {
-    console.error("Post-login error:", dbError);
-    alert("Something went wrong after login ❌");
-    loginBtn.disabled = false;
-    return; // ⛔ STOP 
-   }
 };
 
-/* READY BUTTON */
+/* READY BUTTON ANIMATION */
 document.getElementById("readyBtn").onclick = () => {
   explorer.classList.add("hidden");
   overlay.style.display = "flex";
@@ -245,7 +249,7 @@ document.getElementById("readyBtn").onclick = () => {
   const start = performance.now();
   const circumference = 2 * Math.PI * 90;
 
-  function animate(t){
+  function animate(t) {
     const p = Math.min((t - start) / duration, 1);
     ring.style.strokeDashoffset = circumference * p;
 
@@ -259,9 +263,9 @@ document.getElementById("readyBtn").onclick = () => {
     number.style.color = color;
     number.textContent = Math.ceil((duration - (t - start)) / 1000) || "";
 
-    if(p < 1){
+    if (p < 1) {
       requestAnimationFrame(animate);
-    }else{
+    } else {
       overlay.style.display = "none";
       result.classList.remove("hidden");
 
@@ -269,13 +273,13 @@ document.getElementById("readyBtn").onclick = () => {
       decrypt.innerText =
         "Decrypting hint...\nAccessing data...\n██████████▒▒▒▒▒▒▒▒▒▒";
 
-      setTimeout(()=>{
+      setTimeout(() => {
         decrypt.style.animation = "none";
         decrypt.style.color = "#00ffd5";
         decrypt.style.textShadow = "0 0 12px rgba(0,255,213,.6)";
         decrypt.innerText =
           "🔍 Next Hint:\nLook where knowledge sleeps and wisdom waits…";
-      },2500);
+      }, 2500);
     }
   }
   requestAnimationFrame(animate);
