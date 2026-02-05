@@ -29,15 +29,21 @@ body{
   animation:fadeIn .6s ease;
 }
 
-button{
-  margin-top:22px;
-  padding:12px 28px;
-  border:none;
-  border-radius:25px;
-  background:#00c6ff;
-  color:#000;
-  font-size:16px;
-  cursor:pointer;
+  #googleBtn {
+  margin-top: 22px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 25px; /* Pill shape */
+  background: #00c6ff;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#googleBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @keyframes fadeIn{
@@ -170,20 +176,48 @@ const number = document.getElementById("number");
 const result = document.getElementById("screen-result");
 const decrypt = document.getElementById("decryptText");
 
-/* GOOGLE LOGIN */
-document.getElementById("googleBtn").onclick = async () => {
-  try{
-    const res = await signInWithPopup(auth, new GoogleAuthProvider());
-    const u = res.user;
+//login
+googleBtn.onclick = async () => {
+  googleBtn.disabled = true;
 
-    /* ✅ SAVE USER — NO DUPLICATES */
-    await set(ref(db, "participants/" + u.uid), {
-      name: u.displayName,
-      email: u.email,
-      lastLogin: new Date().toISOString()
+  let user;
+
+  try {
+    // ✅ AUTH ONLY
+    const result = await signInWithPopup(auth, provider);
+    user = result.user;
+
+    if (!user) {
+      throw new Error("User object missing");
+    }
+
+  } catch (authError) {
+    console.error("Auth error:", authError);
+    alert("Login failed ❌");
+    googleBtn.disabled = false;
+    return; // ⛔ STOP EVERYTHING
+  }
+
+  // ⬇️ FROM HERE: LOGIN IS CONFIRMED SUCCESSFUL ⬇️
+
+  try {
+    const userRef = ref(db, "participants/" + user.uid);
+    const snap = await get(userRef);
+
+    if (snap.exists() && snap.val().blocked === true) {
+      alert("You are blocked from this event.");
+      await signOut(auth);
+      googleBtn.disabled = false;
+      return; // ⛔ STOP
+    }
+
+    await update(userRef, {
+      name: user.displayName,
+      email: user.email,
+      lastLogin: Date.now()
     });
-
-    login.classList.add("hidden");
+    
+login.classList.add("hidden");
     welcome.classList.remove("hidden");
     document.getElementById("welcomeText").innerText =
       `Welcome, ${u.displayName || "Explorer"}`;
@@ -193,8 +227,11 @@ document.getElementById("googleBtn").onclick = async () => {
       explorer.classList.remove("hidden");
     },1500);
 
-  }catch(e){
-    alert(e.message);
+  } catch (dbError) {
+    console.error("Post-login error:", dbError);
+    alert("Something went wrong after login ❌");
+    googleBtn.disabled = false;
+    return; // ⛔ STOP
   }
 };
 
