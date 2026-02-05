@@ -162,7 +162,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+const provider = new GoogleAuthProvider();
 await setPersistence(auth, inMemoryPersistence);
+  
 
 /* ELEMENTS */
 const login = document.getElementById("screen-login");
@@ -174,13 +176,14 @@ const number = document.getElementById("number");
 const result = document.getElementById("screen-result");
 const decrypt = document.getElementById("decryptText");
 
-/* GOOGLE LOGIN */
-document.getElementById("googleBtn").onclick = async () => {
+//login
+googleBtn.onclick = async () => {
   googleBtn.disabled = true;
    let user;
   try{
-    const res = await signInWithPopup(auth, new GoogleAuthProvider());
-    const u = res.user;
+ // ✅ AUTH ONLY
+    const result = await signInWithPopup(auth, provider);
+    user = result.user;
 
    if (!user) {
       throw new Error("User object missing");
@@ -225,6 +228,12 @@ document.getElementById("googleBtn").onclick = async () => {
   }catch(e){
     alert(e.message);
   }
+   catch (dbError) {
+    console.error("Post-login error:", dbError);
+    alert("Something went wrong after login ❌");
+    loginBtn.disabled = false;
+    return; // ⛔ STOP 
+   }
 };
 
 /* READY BUTTON */
