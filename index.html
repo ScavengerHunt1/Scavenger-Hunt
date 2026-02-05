@@ -173,15 +173,9 @@ const decrypt = document.getElementById("decryptText");
 /* GOOGLE LOGIN */
 document.getElementById("googleBtn").onclick = async () => {
   try{
-    
     const res = await signInWithPopup(auth, new GoogleAuthProvider());
     const u = res.user;
-// 1. Disable button immediately so they can't click twice
-    btn.disabled = true;
-    btn.innerText = "Signing in...";
-    btn.style.opacity = "0.5";
-    btn.style.cursor = "not-allowed";
-    
+
     /* ✅ SAVE USER — NO DUPLICATES */
     await set(ref(db, "participants/" + u.uid), {
       name: u.displayName,
@@ -198,13 +192,8 @@ document.getElementById("googleBtn").onclick = async () => {
       welcome.classList.add("hidden");
       explorer.classList.remove("hidden");
     },1500);
-  }
-  catch (e) {
-    // Reset button if there is an error (e.g. user closes the popup)
-    btn.disabled = false;
-    btn.innerText = "Continue with Google";
-    btn.style.opacity = "1";
-    btn.style.cursor = "pointer";
+
+  }catch(e){
     alert(e.message);
   }
 };
