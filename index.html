@@ -97,13 +97,18 @@ svg{transform:rotate(-90deg)}
   animation:flicker .15s infinite;
 }
 @keyframes flicker{50%{opacity:.85}}
+
+  #googleBtn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
 </style>
 </head>
 
 <body>
 
 <!-- SCREEN 1: LOGIN -->
-<div class="card" id="screen-login">
+<div class="card" id="">
   <h2>Continue to Scavenger Hunt</h2>
   <button id="googleBtn">Continue with Google</button>
 </div>
