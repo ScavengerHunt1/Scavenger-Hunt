@@ -97,18 +97,13 @@ svg{transform:rotate(-90deg)}
   animation:flicker .15s infinite;
 }
 @keyframes flicker{50%{opacity:.85}}
-
-  #googleBtn:disabled{
-  opacity:.6;
-  cursor:not-allowed;
-}
 </style>
 </head>
 
 <body>
 
 <!-- SCREEN 1: LOGIN -->
-<div class="card" id="">
+<div class="card" id="screen-login">
   <h2>Continue to Scavenger Hunt</h2>
   <button id="googleBtn">Continue with Google</button>
 </div>
@@ -178,6 +173,12 @@ const decrypt = document.getElementById("decryptText");
 /* GOOGLE LOGIN */
 document.getElementById("googleBtn").onclick = async () => {
   try{
+    // 1. Disable button immediately so they can't click twice
+    btn.disabled = true;
+    btn.innerText = "Signing in...";
+    btn.style.opacity = "0.5";
+    btn.style.cursor = "not-allowed";
+    
     const res = await signInWithPopup(auth, new GoogleAuthProvider());
     const u = res.user;
 
@@ -198,7 +199,12 @@ document.getElementById("googleBtn").onclick = async () => {
       explorer.classList.remove("hidden");
     },1500);
 
-  }catch(e){
+  catch (e) {
+    // Reset button if there is an error (e.g. user closes the popup)
+    btn.disabled = false;
+    btn.innerText = "Continue with Google";
+    btn.style.opacity = "1";
+    btn.style.cursor = "pointer";
     alert(e.message);
   }
 };
